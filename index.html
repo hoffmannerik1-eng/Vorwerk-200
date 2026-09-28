@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>VR200 Control</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 50% 20%, #18352b, #050807 55%);
+  color: white;
+  font-family: Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.panel {
+  width: min(700px, 94vw);
+  padding: 30px;
+  border: 1px solid #234d3d;
+  border-radius: 28px;
+  background: rgba(10,20,17,.9);
+  box-shadow: 0 0 60px rgba(40,255,150,.12);
+}
+
+h1 {
+  margin-top: 0;
+  text-align: center;
+  letter-spacing: 4px;
+}
+
+.status {
+  text-align: center;
+  padding: 18px;
+  border-radius: 18px;
+  background: #101c18;
+  margin: 20px 0;
+}
+
+.dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #777;
+  margin-right: 8px;
+}
+
+button {
+  width: 100%;
+  padding: 18px;
+  margin-top: 12px;
+  border: 0;
+  border-radius: 16px;
+  background: #163c2d;
+  color: white;
+  font-size: 17px;
+  cursor: pointer;
+  transition: .2s;
+}
+
+button:hover {
+  background: #1d6045;
+  transform: translateY(-2px);
+}
+
+.result {
+  margin-top: 20px;
+  padding: 15px;
+  border-radius: 15px;
+  background: #070c0a;
+  font-family: monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+</style>
+</head>
+
+<body>
+
+<div class="panel">
+
+  <h1>VR200</h1>
+
+  <div class="status">
+    <span class="dot" id="dot"></span>
+    <span id="status">Nicht getestet</span>
+  </div>
+
+  <button onclick="findRobot()">
+    🔎 VR200 automatisch suchen
+  </button>
+
+  <div class="result" id="result">
+Noch kein Suchlauf gestartet.
+  </div>
+
+</div>
+
+<script>
+async function findRobot() {
+
+  const status = document.getElementById("status");
+  const dot = document.getElementById("dot");
+  const result = document.getElementById("result");
+
+  status.textContent = "Suche im WLAN...";
+  dot.style.background = "#ffaa00";
+
+  result.textContent =
+    "Ich suche nach einem VR200 im lokalen Netzwerk.\n" +
+    "Das kann einige Sekunden dauern.";
+
+  try {
+
+    const response = await fetch("/api/find");
+    const data = await response.json();
+
+    if (!data.success) {
+      throw new Error(data.error);
+    }
+
+    if (data.robots.length === 0) {
+
+      status.textContent = "Kein VR200 gefunden";
+      dot.style.background = "#ff4444";
+
+      result.textContent =
+        "Kein Gerät mit der getesteten VR200-Schnittstelle gefunden.\n\n" +
+        "Das bedeutet NICHT automatisch, dass der Roboter nicht im WLAN ist.";
+      
+      return;
+    }
+
+    status.textContent = "VR200 gefunden";
+    dot.style.background = "#45ff9a";
+
+    result.textContent =
+      "Gefundene Geräte:\n\n" +
+      data.robots.join("\n");
+
+  } catch (error) {
+
+    status.textContent = "Fehler";
+    dot.style.background = "#ff4444";
+
+    result.textContent = error.message;
+  }
+}
+</script>
+
+</body>
+</html>
